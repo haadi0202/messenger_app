@@ -1,4 +1,4 @@
-//ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:messenger_app/components/chat.dart';
 import 'package:messenger_app/pages/chat_page.dart';
@@ -14,17 +14,17 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  //initialize unfiltered chats
+  // Initialize unfiltered chats
   List<Chat> chats = [];
-  //error message
+  // Error message
   String errorMessage = "";
-  //chatCollection service
+  // Chat collection service
   ChatsCollection chatsCollection = ChatsCollection();
-  //UserCollection service
+  // User collection service
   UsersCollection usersCollection = UsersCollection();
-  //auth object
+  // Auth object
   Auth auth = Auth();
-  //current user email
+  // Current user email
   String currentUserEmail = "";
 
   void refresh() {
@@ -43,144 +43,189 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.yellow,
-          title: Text(currentUserEmail),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  auth.signOut();
-                },
-                icon: Icon(Icons.logout))
-          ],
+      appBar: AppBar(
+        backgroundColor: Colors.indigoAccent,
+        title: Text(
+          currentUserEmail,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
-        body: StreamBuilder(
-            stream: chatsCollection.getChatCollectionSnapshit(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                //initialize chats as documentSnapshots
-                List<DocumentSnapshot> documentSnapshots = snapshot.data!.docs;
-                //initialize chats as Maps
-                List<Map<String, dynamic>> mapchats = [];
-                //populate Mapchats
-                initializeMapChats(documentSnapshots, mapchats);
-                //initialize unfiltered chats
-                List<Chat> unfilteredchats = [];
-                //chats defined above in class now just put them to empty
-                chats = [];
-                //populate unfiltered chats
-                populateUnfilteredChats(mapchats, unfilteredchats);
-                //populate chats
-                populateChats(unfilteredchats);
-                //future builder to get latest messages
-                return FutureBuilder(future: () async {
-                  for (var i = 0; i < chats.length; i++) {
-                    chats[i].lastMessage = await chatsCollection
-                        .lastMessageByChatID(chatID: chats[i].ID);
-                  }
-                }(), builder: (context, snapshot) {
-                  //display chats
-                  return ListView(
-                      children: chats
-                          .map((element) => chatTile(
-                              chatName: element.chatName,
-                              ID: element.ID,
-                              currentUser: currentUserEmail,
-                              lastMessage: element.lastMessage))
-                          .toList());
-                });
-              }
-              return Text("empty");
-            }),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
-                context: context,
-                builder: (context) {
-                  return DialogcreateChat(
-                      errorMessage: errorMessage,
-                      currentUserEmail: currentUserEmail,
-                      usersCollection: usersCollection,
-                      chatsCollection: chatsCollection,
-                      chats: chats);
-                });
-          },
-          child: Icon(Icons.add),
-        ));
+        actions: [
+          IconButton(
+            onPressed: () {
+              auth.signOut();
+            },
+            icon: Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
+      body: StreamBuilder(
+        stream: chatsCollection.getChatCollectionSnapshit(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            // Initialize chats as document snapshots
+            List<DocumentSnapshot> documentSnapshots = snapshot.data!.docs;
+            // Initialize chats as Maps
+            List<Map<String, dynamic>> mapChats = [];
+            // Populate MapChats
+            initializeMapChats(documentSnapshots, mapChats);
+            // Initialize unfiltered chats
+            List<Chat> unfilteredChats = [];
+            // Empty the chat list
+            chats = [];
+            // Populate unfiltered chats
+            populateUnfilteredChats(mapChats, unfilteredChats);
+            // Populate chats
+            populateChats(unfilteredChats);
+            // Future builder to get the latest messages
+            return FutureBuilder(
+              future: () async {
+                for (var i = 0; i < chats.length; i++) {
+                  chats[i].lastMessage = await chatsCollection
+                      .lastMessageByChatID(chatID: chats[i].ID);
+                }
+              }(),
+              builder: (context, snapshot) {
+                // Display chats
+                return ListView.builder(
+                  padding: EdgeInsets.all(10),
+                  itemCount: chats.length,
+                  itemBuilder: (context, index) {
+                    var chat = chats[index];
+                    return chatTile(
+                      chatName: chat.chatName,
+                      ID: chat.ID,
+                      currentUser: currentUserEmail,
+                      lastMessage: chat.lastMessage,
+                    );
+                  },
+                );
+              },
+            );
+          }
+          return Center(child: Text("No chats available"));
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return DialogcreateChat(
+                errorMessage: errorMessage,
+                currentUserEmail: currentUserEmail,
+                usersCollection: usersCollection,
+                chatsCollection: chatsCollection,
+                chats: chats,
+              );
+            },
+          );
+        },
+        backgroundColor: Colors.indigoAccent,
+        child: Icon(Icons.add, color: Colors.white),
+        tooltip: 'Create a new chat',
+      ),
+    );
   }
 
-  void populateChats(List<Chat> unfilteredchats) {
-    for (var i = 0; i < unfilteredchats.length; i++) {
-      if (unfilteredchats[i].chatID.contains(currentUserEmail)) {
-        chats.add(unfilteredchats[i]);
+  // Populates chats that contain the current user email
+  void populateChats(List<Chat> unfilteredChats) {
+    for (var chat in unfilteredChats) {
+      if (chat.chatID.contains(currentUserEmail)) {
+        chats.add(chat);
       }
     }
   }
 
+  // Converts mapChats into unfilteredChat objects
   void populateUnfilteredChats(
-      List<Map<String, dynamic>> mapchats, List<Chat> unfilteredchats) {
-    for (var i = 0; i < mapchats.length; i++) {
-      unfilteredchats.add(
+      List<Map<String, dynamic>> mapChats, List<Chat> unfilteredChats) {
+    for (var mapChat in mapChats) {
+      unfilteredChats.add(
         Chat(
-            chatName: mapchats[i]["chatName"],
-            ID: mapchats[i]["ID"],
-            chatID: mapchats[i]["chatID"]),
+          chatName: mapChat["chatName"],
+          ID: mapChat["ID"],
+          chatID: mapChat["chatID"],
+        ),
       );
     }
   }
 
+  // Converts document snapshots into MapChats
   void initializeMapChats(List<DocumentSnapshot<Object?>> documentSnapshots,
-      List<Map<String, dynamic>> mapchats) {
-    for (var i = 0; i < documentSnapshots.length; i++) {
-      mapchats.add({
-        "ID": documentSnapshots[i].id,
-        "chatName": documentSnapshots[i].get("chatName"),
-        "chatID": documentSnapshots[i].get("chatID")
+      List<Map<String, dynamic>> mapChats) {
+    for (var doc in documentSnapshots) {
+      mapChats.add({
+        "ID": doc.id,
+        "chatName": doc.get("chatName"),
+        "chatID": doc.get("chatID"),
       });
     }
   }
 
-  Widget chatTile(
-      {required String chatName,
-      required String ID,
-      required String currentUser,
-      required DocumentSnapshot? lastMessage}) {
+  // The chat tile that displays chat info and navigates to the chat page
+  Widget chatTile({
+    required String chatName,
+    required String ID,
+    required String currentUser,
+    required DocumentSnapshot? lastMessage,
+  }) {
     return GestureDetector(
-        onTap: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ChatPage(
-                      ID: ID,
-                      senderEmail: currentUser,
-                      refreshParentPage: refresh)));
-        },
-        child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: (lastMessage != null)
-                ? lastMessage.get("read").contains(currentUserEmail)
-                    ? Column(children: [
-                        Text(lastMessage.get("content")),
-                        Text(chatName)
-                      ])
-                    : Column(children: [
-                        Text(lastMessage.get("content"),
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(chatName)
-                      ])
-                : Column(children: [Text("no messages"), Text(chatName)])));
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatPage(
+              ID: ID,
+              senderEmail: currentUser,
+              refreshParentPage: refresh,
+            ),
+          ),
+        );
+      },
+      child: Card(
+        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: Colors.indigoAccent,
+            child: Icon(Icons.chat, color: Colors.white),
+          ),
+          title: Text(
+            chatName,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          subtitle: lastMessage != null
+              ? lastMessage.get("read").contains(currentUserEmail)
+              ? Text(
+            lastMessage.get("content"),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          )
+              : Text(
+            lastMessage.get("content"),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          )
+              : Text("No messages yet"),
+        ),
+      ),
+    );
   }
 }
 
 // ignore: must_be_immutable
 class DialogcreateChat extends StatefulWidget {
-  DialogcreateChat(
-      {super.key,
-      required this.errorMessage,
-      required this.currentUserEmail,
-      required this.usersCollection,
-      required this.chatsCollection,
-      required this.chats});
+  DialogcreateChat({
+    super.key,
+    required this.errorMessage,
+    required this.currentUserEmail,
+    required this.usersCollection,
+    required this.chatsCollection,
+    required this.chats,
+  });
 
   String errorMessage;
   String currentUserEmail;
@@ -193,130 +238,122 @@ class DialogcreateChat extends StatefulWidget {
 }
 
 class _DialogcreateChatState extends State<DialogcreateChat> {
-  //list of requested user emails
+  // List of requested user emails
   List<String> requestedUserEmails = [];
-  //chat name controller
+  // Chat name controller
   TextEditingController chatNameController = TextEditingController();
-  //requested user controller
+  // Requested user controller
   TextEditingController requestedUserEmailController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
-        child: Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          //chat name feild
-          TextField(
-            controller: chatNameController,
-            decoration: InputDecoration(hintText: "chat name"),
-          ),
-          //add user feild
-          TextField(
-            controller: requestedUserEmailController,
-            decoration: InputDecoration(hintText: "add user"),
-          ),
-          //error message
-          Text(widget.errorMessage),
-          //add user button
-          TextButton(
-              onPressed: () async {
-                //clear error text
-                setState(() {
-                  widget.errorMessage = "";
-                });
-                //get requestedUserEmailController text
-                String enteredEmail = requestedUserEmailController.text;
-                //is entered email present in collection
-                bool isEmailInUsersCollection = await UsersCollection()
-                    .isEmailInUsersCollection(email: enteredEmail);
-                //check wether isEmailInUsersCollection true or false
-                if (isEmailInUsersCollection) {
-                  //is entered email not present in requested emails list
-                  if (!requestedUserEmails.contains(enteredEmail)) {
-                    if (enteredEmail == widget.currentUserEmail) {
-                      setState(() {
-                        widget.errorMessage = "you cannot add yourself";
-                      });
-                    } else {
-                      //populate requestedUserEmail list
-                      requestedUserEmails.add(enteredEmail);
-                      //set error statement to added
-                      setState(() {
-                        widget.errorMessage = "added";
-                      });
-                    }
-                  } else {
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: chatNameController,
+              decoration: InputDecoration(
+                labelText: "Chat Name",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: requestedUserEmailController,
+              decoration: InputDecoration(
+                labelText: "Add User",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              widget.errorMessage,
+              style: TextStyle(color: Colors.red),
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () async {
+                    // Clear error text
                     setState(() {
-                      widget.errorMessage = "User is already added";
+                      widget.errorMessage = "";
                     });
-                  }
-                } else {
-                  //set error statement to wrong email
-                  setState(() {
-                    widget.errorMessage = "wrong email";
-                  });
-                }
-                //clear add user feild
-                requestedUserEmailController.clear();
-              },
-              child: Text("add user")),
-          //create chat button
-          TextButton(
-              onPressed: requestedUserEmails.isNotEmpty
-                  ? () {
-                      //add current user in requestedUserEmails list as well
-                      requestedUserEmails.add(widget.currentUserEmail);
-                      //generate chatID
-                      String chatID = generatechatID(
-                          requestedUsersEmails: requestedUserEmails);
-                      //to prevent multiple instances of same chat
-                      if (!ischatIDalreadyInAvailableChats(
-                          chatID: chatID, chats: widget.chats)) {
-                        //populate chatCollection
-                        widget.chatsCollection.createChat(
-                            chatName: chatNameController.text, chatID: chatID);
-                        //after chat is created: clear requestedUserEmails
-                        setState(() {
-                          Navigator.pop(context);
-                        });
+                    // Get requested user email
+                    String enteredEmail = requestedUserEmailController.text;
+                    // Check if email is valid
+                    bool isEmailInUsersCollection = await widget
+                        .usersCollection
+                        .isEmailInUsersCollection(email: enteredEmail);
+                    if (isEmailInUsersCollection) {
+                      if (!requestedUserEmails.contains(enteredEmail)) {
+                        if (enteredEmail == widget.currentUserEmail) {
+                          setState(() {
+                            widget.errorMessage = "You cannot add yourself";
+                          });
+                        } else {
+                          requestedUserEmails.add(enteredEmail);
+                          setState(() {
+                            widget.errorMessage = "Added!";
+                          });
+                        }
                       } else {
-                        //requestedUsersList to empty
-                        requestedUserEmails = [];
-                        //set feilds to empty
-                        chatNameController.clear();
-                        requestedUserEmailController.clear();
-                        //set error
                         setState(() {
-                          widget.errorMessage = "you already have this chat";
+                          widget.errorMessage = "User is already added";
                         });
                       }
+                    } else {
+                      setState(() {
+                        widget.errorMessage = "Invalid email";
+                      });
                     }
-                  : null,
-              child: Text("create chat"))
-        ],
+                    requestedUserEmailController.clear();
+                  },
+                  child: Text("Add User"),
+                ),
+                TextButton(
+                  onPressed: requestedUserEmails.isNotEmpty
+                      ? () {
+                    requestedUserEmails.add(widget.currentUserEmail);
+                    String chatID = generatechatID(
+                        requestedUsersEmails: requestedUserEmails);
+                    if (!ischatIDalreadyInAvailableChats(
+                        chatID: chatID, chats: widget.chats)) {
+                      widget.chatsCollection.createChat(
+                        chatName: chatNameController.text,
+                        chatID: chatID,
+                      );
+                      Navigator.pop(context);
+                    } else {
+                      setState(() {
+                        widget.errorMessage =
+                        "You already have this chat";
+                      });
+                    }
+                  }
+                      : null,
+                  child: Text("Create Chat"),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   bool ischatIDalreadyInAvailableChats(
       {required String chatID, required List<Chat> chats}) {
-    bool flag = false;
-    for (var i = 0; i < chats.length; i++) {
-      if (chats[i].chatID == chatID) {
-        flag = true;
-      }
-    }
-    return flag;
+    return chats.any((chat) => chat.chatID == chatID);
   }
 
   String generatechatID({required List<String> requestedUsersEmails}) {
     requestedUsersEmails.sort();
-    String s = "";
-    for (var i = 0; i < requestedUsersEmails.length; i++) {
-      s = s + requestedUsersEmails[i];
-    }
-    return s;
+    return requestedUsersEmails.join("");
   }
 }
