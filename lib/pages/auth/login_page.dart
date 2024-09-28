@@ -25,66 +25,117 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-          child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person, size: 200),
-            Text("Log In using your email"),
-            SizedBox(height: 20),
-            Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Theme.of(context).colorScheme.primary),
-              child: TextField(
-                onTapOutside: (event) {
-                  FocusScope.of(context).unfocus();
-                },
-                controller: emailController,
-                decoration: InputDecoration(
-                    hintText: "example@gmail.com",
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary),
-                        borderRadius: BorderRadius.all(Radius.circular(10))),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary),
-                        borderRadius: BorderRadius.all(Radius.circular(10)))),
-              ),
-            ),
-            SizedBox(height: 5),
-            Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Theme.of(context).colorScheme.primary),
-              child: TextField(
-                onTapOutside: (event) {
-                  FocusScope.of(context).unfocus();
-                },
-                controller: pswdController,
-                decoration: InputDecoration(
-                    hintText: "password",
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary),
-                        borderRadius: BorderRadius.all(Radius.circular(10))),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary),
-                        borderRadius: BorderRadius.all(Radius.circular(10)))),
-              ),
-            ),
-            SizedBox(height: 10),
-            Text("$errorMessage", style: TextStyle(color: Colors.red[700])),
-            SizedBox(height: 10),
-            TextButton(
-                onPressed: (emailController.text.isNotEmpty &&
-                        pswdController.text.isNotEmpty)
-                    ? () async {
+        backgroundColor: Theme.of(context).colorScheme.background,
+        body: SafeArea(
+          child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 150),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.person,
+                      size: 100,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    SizedBox(height: 30),
+                    Text(
+                      "Log In using your email",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onBackground,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        onTapOutside: (event) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          hintText: "example@gmail.com",
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(Icons.email, color: Colors.grey),
+                          filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surface,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        onTapOutside: (event) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        controller: pswdController,
+                        decoration: InputDecoration(
+                          hintText: "Password",
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(Icons.lock, color: Colors.grey),
+                          filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surface, // Whitish surface
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary), // IndigoAccent
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    // Error Message Display
+                    if (errorMessage != null && errorMessage!.isNotEmpty)
+                      Text(
+                        "$errorMessage",
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    SizedBox(height: 15),
+                    ElevatedButton(
+                      onPressed: (emailController.text.isNotEmpty &&
+                          pswdController.text.isNotEmpty)
+                          ? () async {
                         try {
                           await auth.signIn(
                               email: emailController.text,
@@ -95,39 +146,44 @@ class LoginPageState extends State<LoginPage> {
                           });
                         }
                       }
-                    : null,
-                style: ButtonStyle(
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)))),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Log In"),
-                    ],
-                  ),
-                )),
-            SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Not a member? ",
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.secondary)),
-                GestureDetector(
-                  onTap: () {
-                    flag = false;
-                    refreshParent();
-                  },
-                  child: Text("Register Now",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                )
-              ],
-            )
-          ],
-        ),
-      )),
-    );
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                        Theme.of(context).colorScheme.primary,
+                        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 80),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        "Log In",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Not a member? ",
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onBackground)),
+                        GestureDetector(
+                          onTap: () {
+                            flag = false;
+                            refreshParent();
+                          },
+                          child: Text("Register Now",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary)),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              )),
+        ));
   }
 }
