@@ -60,7 +60,7 @@ class HomePageState extends State<HomePage> {
         ],
       ),
       body: StreamBuilder(
-        stream: chatsCollection.getChatCollectionSnapshit(),
+        stream: chatsCollection.getChatCollectionSnapshot(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             // Initialize chats as document snapshots

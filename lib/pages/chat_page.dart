@@ -27,8 +27,10 @@ class ChatPage extends StatefulWidget {
 class ChatPageState extends State<ChatPage> {
   //initialize chatsCollection services
   ChatsCollection chatsCollection = ChatsCollection();
+
   //controller for scrolling
   ScrollController _scrollController = ScrollController();
+
   //controller for message input
   TextEditingController messageController = TextEditingController();
 
@@ -36,7 +38,7 @@ class ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.senderEmail}"),
+        title: Text(widget.senderEmail),
         backgroundColor: Colors.indigoAccent,
       ),
       body: SafeArea(
@@ -47,24 +49,21 @@ class ChatPageState extends State<ChatPage> {
                 stream: chatsCollection.readMessages(chatID: widget.ID),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    //initialize documents list
                     List<DocumentSnapshot> documents = snapshot.data!.docs;
-                    //initialize mapMessages list
                     List<Map<String, dynamic>> mapMessages = [];
-                    //initialize messages
                     List<Message> messages = [];
-                    //populate mapMessages
+
+                    // Populate mapMessages and messages
                     populateMapMessages(documents, mapMessages);
-                    //populate messages
                     populateMessages(mapMessages, messages);
-                    //mark messages as read
+
+                    // Mark messages as read
                     markMessagesRead(messages);
-                    //refresh parent page
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       widget.refreshParentPage();
                     });
 
-                    // Automatically scroll to the bottom when new messages are added
+                    // Auto scroll to the bottom after building
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (_scrollController.hasClients) {
                         _scrollController.jumpTo(
@@ -74,7 +73,7 @@ class ChatPageState extends State<ChatPage> {
                     });
 
                     return ListView.builder(
-                      controller: _scrollController, // Use the scroll controller
+                      controller: _scrollController,
                       padding: EdgeInsets.all(10),
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
@@ -82,6 +81,10 @@ class ChatPageState extends State<ChatPage> {
                           content: messages[index].content,
                           sender: messages[index].senderEmail,
                           read: messages[index].read,
+                          username: messages[index].username,
+
+                          profilePictureUrl: messages[index]
+                              .profilePictureUrl,
                         );
                       },
                     );
@@ -102,33 +105,44 @@ class ChatPageState extends State<ChatPage> {
                         hintText: "Type a message...",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-
                         ),
                       ),
                     ),
                   ),
+                  // In the onPressed function of the IconButton
                   IconButton(
                     icon: Icon(Icons.send, color: Colors.indigoAccent),
-                    onPressed: () {
+                    onPressed: () async {
                       if (messageController.text.isNotEmpty) {
-                        // Make message object to send
+                        // Fetch username from Firestore based on senderEmail
+                        String username = await chatsCollection.getUsernameByEmail(widget.senderEmail);
+
+                        // Create message object to send
                         Message message = Message(
                           content: messageController.text,
                           senderEmail: widget.senderEmail,
                           read: [widget.senderEmail],
+                          username: username, // Use the fetched username here
+                          profilePictureUrl: 'assets/avatar.png', // Use a default if no user profile picture is set
                         );
-                        // Send message
+
+                        // Send message to Firestore
                         chatsCollection.sendMessage(
                           chatID: widget.ID,
                           content: message.content,
                           sender: message.senderEmail,
                           read: message.read,
+                          username: message.username,
+                          profilePictureUrl: message.profilePictureUrl ?? 'assets/avatar.png', // Provide the asset path as the default value
                         );
+
                         // Update timestamp
                         chatsCollection.updateTimeStamp(chatID: widget.ID);
-                        // Clear field
+
+                        // Clear input field
                         messageController.clear();
-                        // Scroll to bottom
+
+                        // Scroll to the bottom
                         if (_scrollController.hasClients) {
                           _scrollController.jumpTo(
                             _scrollController.position.maxScrollExtent,
@@ -137,6 +151,7 @@ class ChatPageState extends State<ChatPage> {
                       }
                     },
                   ),
+
                 ],
               ),
             ),
@@ -159,32 +174,39 @@ class ChatPageState extends State<ChatPage> {
     }
   }
 
-  void populateMessages(
-      List<Map<String, dynamic>> mapMessages,
-      List<Message> messages,
-      ) {
+  void populateMessages(List<Map<String, dynamic>> mapMessages,
+      List<Message> messages,) {
     for (var i = 0; i < mapMessages.length; i++) {
       messages.add(Message(
         ID: mapMessages[i]["ID"],
         content: mapMessages[i]["content"],
         senderEmail: mapMessages[i]["sender"],
-        timeStamp: mapMessages[i]["timeStamp"].toDate(),
-        read: List<String>.from(mapMessages[i]["read"]), // Casting to List<String>
+        timeStamp: mapMessages[i]["timeStamp"]?.toDate(),
+        // Handle possible null timestamp
+        read: List<String>.from(mapMessages[i]["read"] ?? []),
+        // Safe cast to List<String>
+        username: mapMessages[i]["username"],
+        // Handle null username
+        profilePictureUrl: mapMessages[i]["profilePictureUrl"] ??
+            '', // Handle null profile picture URL
       ));
     }
   }
 
-  void populateMapMessages(
-      List<DocumentSnapshot<Object?>> documents,
-      List<Map<String, dynamic>> mapMessages,
-      ) {
+  void populateMapMessages(List<DocumentSnapshot<Object?>> documents,
+      List<Map<String, dynamic>> mapMessages,) {
     for (var i = 0; i < documents.length; i++) {
       mapMessages.add({
         "ID": documents[i].id,
         "content": documents[i].get("content"),
         "sender": documents[i].get("sender"),
         "timeStamp": documents[i].get("timeStamp"),
-        "read": documents[i].get("read"),
+        "read": documents[i].get("read") ?? [],
+        // Ensure 'read' is not null
+        "username": documents[i].get("username") ?? 'Unknown',
+        // Handle missing username
+        "profilePictureUrl": documents[i].get("profilePictureUrl") ?? '',
+        // Handle missing profile picture URL
       });
     }
   }
@@ -193,6 +215,9 @@ class ChatPageState extends State<ChatPage> {
     required String content,
     required String sender,
     required List<String> read,
+    required String username,
+    String? profilePictureUrl,
+    DateTime? timeStamp,
   }) {
     bool isOwnMessage = sender == widget.senderEmail;
 
@@ -201,20 +226,54 @@ class ChatPageState extends State<ChatPage> {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         margin: EdgeInsets.symmetric(vertical: 5),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75, // Limit max width to 75% of the screen width
+        ),
         decoration: BoxDecoration(
           color: isOwnMessage ? Colors.indigoAccent : Colors.grey[300],
           borderRadius: BorderRadius.circular(12),
-
         ),
-        child: Column(
-          crossAxisAlignment:
-          isOwnMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min, // Only take up as much space as necessary
+          mainAxisAlignment: isOwnMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
           children: [
-            Text(
-              content,
-              style: TextStyle(
-                color: isOwnMessage ? Colors.white : Colors.black,
-                fontSize: 16,
+            if (!isOwnMessage)
+              CircleAvatar(
+                backgroundImage: profilePictureUrl != null && profilePictureUrl.isNotEmpty
+                    ? NetworkImage(profilePictureUrl)
+                    : AssetImage('assets/avatar.jpg') as ImageProvider,
+                radius: 20, // Adjust size as needed
+              ),
+            const SizedBox(width: 8),
+            Flexible( // Use Flexible to wrap text and prevent overflow
+              child: Column(
+                crossAxisAlignment: isOwnMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    username,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isOwnMessage ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    content,
+                    style: TextStyle(
+                      color: isOwnMessage ? Colors.white : Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  if (timeStamp != null)
+                    Text(
+                      formatTimestamp(timeStamp),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isOwnMessage ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -222,4 +281,14 @@ class ChatPageState extends State<ChatPage> {
       ),
     );
   }
+
+
+// Helper function to format the timestamp nicely
+  String formatTimestamp(DateTime timeStamp) {
+    // You can adjust this based on your preference
+    return "${timeStamp.hour.toString().padLeft(2, '0')}:${timeStamp.minute
+        .toString().padLeft(2, '0')} - ${timeStamp.day}/${timeStamp
+        .month}/${timeStamp.year}";
+  }
+
 }
