@@ -1,5 +1,7 @@
 //ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:messenger_app/pages/auth/login_or_signup.dart';
@@ -19,23 +21,33 @@ class SignupPage extends StatefulWidget {
 class SignupPageState extends State<SignupPage> {
   Auth auth = Auth();
   String? errorMessage = "";
+
   //email controller
   TextEditingController emailController = TextEditingController();
+
   //pswd controller
   TextEditingController pswdController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Theme
+            .of(context)
+            .colorScheme
+            .background,
         body: SafeArea(
           child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical:150),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 150),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.person_add, size: 100,
-                      color: Theme.of(context).colorScheme.primary,),
+                      color: Theme
+                          .of(context)
+                          .colorScheme
+                          .primary,),
                     SizedBox(height: 30),
 
                     Text(
@@ -43,7 +55,10 @@ class SignupPageState extends State<SignupPage> {
                       style: TextStyle(
                         fontSize: 16,
 
-                        color: Theme.of(context).colorScheme.onBackground,
+                        color: Theme
+                            .of(context)
+                            .colorScheme
+                            .onBackground,
                       ),
                     ),
                     SizedBox(height: 20),
@@ -70,7 +85,10 @@ class SignupPageState extends State<SignupPage> {
                           hintStyle: TextStyle(color: Colors.grey),
                           prefixIcon: Icon(Icons.email, color: Colors.grey),
                           filled: true,
-                          fillColor: Theme.of(context).colorScheme.surface,
+                          fillColor: Theme
+                              .of(context)
+                              .colorScheme
+                              .surface,
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(10)),
                             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -78,7 +96,10 @@ class SignupPageState extends State<SignupPage> {
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(10)),
                             borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary),
+                                color: Theme
+                                    .of(context)
+                                    .colorScheme
+                                    .primary),
                           ),
                         ),
                       ),
@@ -97,7 +118,7 @@ class SignupPageState extends State<SignupPage> {
                           ),
                         ],
 
-                      ),child: TextField(
+                      ), child: TextField(
                       onTapOutside: (event) {
                         FocusScope.of(context).unfocus();
                       },
@@ -108,7 +129,10 @@ class SignupPageState extends State<SignupPage> {
                         hintStyle: TextStyle(color: Colors.grey),
                         prefixIcon: Icon(Icons.lock, color: Colors.grey),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
+                        fillColor: Theme
+                            .of(context)
+                            .colorScheme
+                            .surface,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -116,7 +140,10 @@ class SignupPageState extends State<SignupPage> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
                           borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary),
+                              color: Theme
+                                  .of(context)
+                                  .colorScheme
+                                  .primary),
                         ),
                       ),
                     ),
@@ -154,12 +181,16 @@ class SignupPageState extends State<SignupPage> {
                       }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 80),
+                        backgroundColor: Theme
+                            .of(context)
+                            .colorScheme
+                            .primary,
+                        padding: EdgeInsets.symmetric(
+                            vertical: 15, horizontal: 80),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                      ),child: Text(
+                      ), child: Text(
                       "Sign Up",
                       style: TextStyle(fontSize: 18),
                     ),
@@ -170,7 +201,10 @@ class SignupPageState extends State<SignupPage> {
                       children: [
                         Text("Already have an account? ",
                             style: TextStyle(
-                                color: Theme.of(context).colorScheme.onBackground)),
+                                color: Theme
+                                    .of(context)
+                                    .colorScheme
+                                    .onBackground)),
                         GestureDetector(
                             onTap: () {
                               flag = true;
@@ -178,7 +212,10 @@ class SignupPageState extends State<SignupPage> {
                             },
                             child: Text("LogIn",
                                 style: TextStyle(fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.primary)))
+                                    color: Theme
+                                        .of(context)
+                                        .colorScheme
+                                        .primary)))
                       ],
                     )
                   ],
@@ -186,4 +223,10 @@ class SignupPageState extends State<SignupPage> {
               )),
         ));
   }
+
+
+
 }
+
+
+

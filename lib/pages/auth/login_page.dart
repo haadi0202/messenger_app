@@ -102,6 +102,7 @@ class LoginPageState extends State<LoginPage> {
                           FocusScope.of(context).unfocus();
                         },
                         controller: pswdController,
+                        obscureText: true,
                         decoration: InputDecoration(
                           hintText: "Password",
                           hintStyle: TextStyle(color: Colors.grey),
